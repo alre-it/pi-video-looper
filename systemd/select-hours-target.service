@@ -1,0 +1,12 @@
+[Unit]
+Description=Select work-hours or night-hours target at boot
+After=time-sync.target mnt-videos.mount
+Wants=time-sync.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/pi-video-looper
+ExecStart=/usr/local/bin/select-hours-target.sh
+
+[Install]
+WantedBy=multi-user.target

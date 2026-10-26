@@ -1,0 +1,13 @@
+[Unit]
+Description=Switch to work hours at 06:30 (Mon-Fri)
+
+# No OnBootSec= and no Persistent=: when work-hours.target is stopped at 18:00,
+# systemd re-arms this timer, and a boot timer already in the past fires at
+# once. That switched the screen straight back on every evening (2026-10).
+# The state at boot is chosen by select-hours-target.service instead.
+[Timer]
+OnCalendar=Mon..Fri 06:30
+Unit=work-hours.target
+
+[Install]
+WantedBy=timers.target

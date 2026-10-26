@@ -1,0 +1,13 @@
+[Unit]
+Description=Blank KMS outputs while the looper is off
+After=video-looper.service
+# Stopped with the night, so it runs again every evening.
+PartOf=night-hours.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/kmsblank
+RemainAfterExit=yes
+
+[Install]
+WantedBy=night-hours.target

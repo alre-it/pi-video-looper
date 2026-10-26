@@ -1,0 +1,4 @@
+[Unit]
+Description=Night hours: screen blanked
+Conflicts=work-hours.target
+Wants=screen-blank.service

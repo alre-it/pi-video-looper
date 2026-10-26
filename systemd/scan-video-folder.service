@@ -1,0 +1,8 @@
+[Unit]
+Description=Restart the looper when files on the share change
+After=network-online.target mnt-videos.mount
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/scan-videos.sh

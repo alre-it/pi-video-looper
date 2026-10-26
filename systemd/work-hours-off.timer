@@ -1,0 +1,9 @@
+[Unit]
+Description=Switch to night hours at 18:00 (Mon-Fri)
+
+[Timer]
+OnCalendar=Mon..Fri 18:00
+Unit=night-hours.target
+
+[Install]
+WantedBy=timers.target

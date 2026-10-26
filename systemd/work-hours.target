@@ -1,0 +1,4 @@
+[Unit]
+Description=Work hours: video looper on
+Conflicts=night-hours.target
+Wants=video-looper.service scan-video-folder.timer

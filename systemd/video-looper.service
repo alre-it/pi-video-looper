@@ -1,0 +1,40 @@
+[Unit]
+Description=Video Loop Player
+After=multi-user.target mnt-videos.mount
+Requires=mnt-videos.mount
+PartOf=work-hours.target
+
+[Service]
+User=tv
+WorkingDirectory=/mnt/videos
+
+# Seconds each still image stays on screen. The share can override it with a
+# file containing IMAGE_DISPLAY_DURATION=<seconds>.
+Environment=IMAGE_DISPLAY_DURATION=240
+EnvironmentFile=-/mnt/videos/image_display_duration_sec.txt
+
+# A logind session on tty1 gives mpv access to the DRM device.
+PAMName=login
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+
+ExecStartPre=+/usr/bin/chvt 1
+ExecStartPre=+/usr/local/bin/build-playlist.sh /mnt/videos /run/playlist.m3u
+ExecStart=/usr/bin/mpv \
+      --no-resume-playback --playlist-start=0 --start=0 \
+      --no-audio --fs --loop-playlist=inf --no-osd-bar \
+      --image-display-duration=${IMAGE_DISPLAY_DURATION} \
+      --no-terminal \
+      --gpu-context=drm --drm-mode=preferred \
+      --hwdec=auto-safe \
+      /run/playlist.m3u
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=work-hours.target
