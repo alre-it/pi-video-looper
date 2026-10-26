@@ -18,7 +18,7 @@ Runs on `bermon01` and `bermon02` (Raspberry Pi 5, Raspberry Pi OS Lite, bookwor
 | `select-hours-target.service` | At boot, picks the mode for the current time (window in `/etc/default/pi-video-looper`). |
 | `video-looper.service` | Builds `/run/playlist.m3u` from the share and plays it with `mpv` in an endless loop. Part of work hours. |
 | `scan-video-folder.timer` | Every 2 min: if files on the share changed, restarts the looper so the playlist is rebuilt. |
-| `screen-blank.service` | `kmsblank` at night, so the TV gets no signal and drops into standby. |
+| `screen-blank.service` | Keeps `kmsblank` running all night, so the TV gets no signal and drops into standby. |
 
 Media: any `mp4 mkv mov webm jpg jpeg png gif` in the share's top level, played in
 natural filename order (prefix files with a date or number to order them). Still
@@ -71,3 +71,6 @@ Not done by `install.sh`, set up by hand:
   start deadlocks the boot.
 - Restarting `work-hours-*.timer` by hand can fire them. After editing, `daemon-reload` is
   enough.
+- `kmsblank` blanks only while it is running: it waits for Enter and unblanks when it
+  exits. `screen-blank.service` feeds it a stdin that never ends; a plain oneshot exits at
+  once and the screen comes straight back.

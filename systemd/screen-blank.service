@@ -1,13 +1,16 @@
 [Unit]
 Description=Blank KMS outputs while the looper is off
 After=video-looper.service
-# Stopped with the night, so it runs again every evening.
+# Stopped with the night, so the looper gets the display back at 06:30.
 PartOf=night-hours.target
 
+# kmsblank blanks only while it runs: it waits for Enter and unblanks on exit.
+# With no stdin it used to exit at once, so the screen never stayed blank.
+# A stdin that never ends keeps it running for the whole night.
 [Service]
-Type=oneshot
-ExecStart=/usr/bin/kmsblank
-RemainAfterExit=yes
+ExecStart=/bin/sh -c 'sleep infinity | exec /usr/bin/kmsblank'
+Restart=on-failure
+RestartSec=10
 
 [Install]
 WantedBy=night-hours.target
