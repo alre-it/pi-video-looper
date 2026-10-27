@@ -4,7 +4,7 @@
 # ordered after multi-user.target, so waiting for the job would deadlock.
 WORK_DAYS_MAX=${WORK_DAYS_MAX:-5}
 WORK_START=${WORK_START:-0630}
-WORK_END=${WORK_END:-1800}
+WORK_END=${WORK_END:-1730}
 
 dow=$(date +%u)
 now=$(date +%H%M)

@@ -2,4 +2,4 @@
 # Keep it in step with the OnCalendar= times in work-hours-on/-off.timer.
 WORK_DAYS_MAX=5     # 1=Mon .. 7=Sun; 5 means Mon-Fri
 WORK_START=0630
-WORK_END=1800
+WORK_END=1730

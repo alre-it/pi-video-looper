@@ -14,7 +14,7 @@ Runs on `bermon01` and `bermon02` (Raspberry Pi 5, Raspberry Pi OS Lite, bookwor
 | `mnt-videos.mount` | Mounts the SMB share read-only at `/mnt/videos` (credentials in `/etc/smbcredentials`). |
 | `work-hours.target` / `night-hours.target` | The two modes. They conflict, so starting one stops the other. |
 | `work-hours-on.timer` | Mon-Fri 06:30 → `work-hours.target`. |
-| `work-hours-off.timer` | Mon-Fri 18:00 → `night-hours.target`. |
+| `work-hours-off.timer` | Mon-Fri 17:30 → `night-hours.target`. |
 | `select-hours-target.service` | At boot, picks the mode for the current time (window in `/etc/default/pi-video-looper`). |
 | `video-looper.service` | Builds `/run/playlist.m3u` from the share and plays it with `mpv` in an endless loop. Part of work hours. |
 | `scan-video-folder.timer` | Every 2 min: if files on the share changed, restarts the looper so the playlist is rebuilt. |
@@ -62,7 +62,7 @@ Not done by `install.sh`, set up by hand:
 
 ## Pitfalls already hit
 
-- **Never add `OnBootSec=` to `work-hours-on.timer`.** When 18:00 stops
+- **Never add `OnBootSec=` to `work-hours-on.timer`.** When 17:30 stops
   `work-hours.target`, systemd re-arms the timer and a boot timer already in the past
   fires at once: the screen went off and straight back on every evening and stayed on
   all weekend (fixed 2026-10-26).
