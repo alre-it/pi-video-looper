@@ -36,7 +36,8 @@ install -d -o "$user" -g "$user" -m 755 "$media"
 
 # Earlier versions played an SMB share mounted at /mnt/videos.
 if [ -e /etc/systemd/system/mnt-videos.mount ]; then
-  systemctl disable --now mnt-videos.mount 2>/dev/null || true
+  systemctl disable mnt-videos.mount 2>/dev/null || true
+  umount /mnt/videos 2>/dev/null || true   # "disable --now" left it mounted
   rm -f /etc/systemd/system/mnt-videos.mount
   echo "NOTE: the SMB mount is gone; /etc/smbcredentials can be deleted." >&2
 fi
@@ -45,6 +46,7 @@ fi
 systemctl mask getty@tty1.service
 
 systemctl daemon-reload
+systemctl reset-failed mnt-videos.mount 2>/dev/null || true
 systemctl enable select-hours-target.service work-hours-on.timer work-hours-off.timer
 systemctl enable --now sync-media.timer
 systemctl enable video-looper.service scan-video-folder.timer screen-blank.service
