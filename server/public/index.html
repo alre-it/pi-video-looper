@@ -3,73 +3,128 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bermon Upload</title>
+<title>Bildschirme – alre</title>
+<link rel="icon" href="alre-logo.svg" type="image/svg+xml">
 <style>
-  :root { --fg: #1f2328; --muted: #6b7280; --line: #d0d7de; --bg: #f6f8fa; --accent: #0b5cad; --danger: #b42318; --ok: #1a7f37; }
+  /* alre Design System tokens (CI manual 11/2023): white ground, grey text,
+     orange brand colour at full strength, sharp corners, hairline borders,
+     no shadows, 8° trapezoid. Neue Helvetica where installed, else Arial
+     (the CI's digital fallback). */
+  :root {
+    --alre-orange: #eb7300; --alre-orange-press: #c45f00; --alre-silver: #efeeee; --alre-white: #ffffff;
+    --alre-grey: #373a3b; --grey-100: #f4f4f4; --grey-300: #d8d8d8; --grey-400: #9a9c9d; --grey-500: #6c6f70;
+    --border-1: #e4e3e3; --border-2: #cfcecd; --focus-ring: #f5a14a;
+    --font-sans: "Neue Helvetica", Arial, "Helvetica Neue", Helvetica, sans-serif;
+    --font-data: "Neue Helvetica Condensed", "Arial Narrow", "Neue Helvetica", Arial, sans-serif;
+    --tracking-headline: 0.04em; --tracking-copy: 0.02em; --tracking-eyebrow: 0.12em;
+    --radius-input: 2px; --ease: cubic-bezier(.22,.61,.36,1); --skew: 8deg;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: #fff; }
-  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  h2 { font-size: 16px; margin: 32px 0 10px; }
-  .sub { color: var(--muted); margin: 0 0 24px; }
-  form.upload { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  html { background: var(--alre-white); }
+  body { margin: 0; font: 300 16px/1.45 var(--font-sans); letter-spacing: var(--tracking-copy); color: var(--alre-grey); background: var(--alre-white); }
+  a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  .page { max-width: 1140px; margin: 0 auto; padding: 0 16px 64px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 0 16px; }
+  header.top img { height: 34px; width: auto; display: block; }
+  header.top .pillars { font-size: 12px; font-weight: 700; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--grey-500); }
+  /* The Farbbalken: an orange slab with the 8° edge, carrying the claim. */
+  .balken { position: relative; height: 40px; margin: 0 0 40px; }
+  .balken span { position: absolute; left: 0; top: 0; height: 100%; display: flex; align-items: center; padding: 0 36px 0 20px;
+    background: var(--alre-orange); color: var(--alre-white); font-size: 18px; font-weight: 700;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 40px * 0.1405) 100%, 0 100%); }
+
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--alre-orange); margin: 0 0 8px; }
+  h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; letter-spacing: var(--tracking-headline); text-transform: uppercase; margin: 0 0 12px; font-weight: 900; }
+  h1 .thin { font-weight: 100; display: block; }
+  .lead { font-size: 18px; margin: 0 0 40px; max-width: 760px; }
+  h2 { font-size: 13px; font-weight: 700; letter-spacing: var(--tracking-headline); text-transform: uppercase; margin: 48px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-2); }
+
+  form.upload { background: var(--alre-silver); padding: 24px; display: grid; gap: 20px 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
   form.upload .full { grid-column: 1 / -1; }
-  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-  input[type=date], input[type=time], input[type=number], input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
-  input[type=file] { font: inherit; }
-  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .checks { display: flex; gap: 14px; padding-top: 6px; }
-  .checks label { display: inline-flex; gap: 6px; align-items: center; color: var(--fg); font-size: 15px; margin: 0; }
-  button { font: inherit; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.danger { color: var(--danger); }
-  button:disabled { opacity: .5; cursor: default; }
-  .hint { font-size: 13px; color: var(--muted); }
+  label { display: block; font-size: 12px; font-weight: 700; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--grey-500); margin-bottom: 6px; }
+  input[type=date], input[type=time], input[type=number], input[type=text] {
+    font: 400 15px/1.3 var(--font-sans); letter-spacing: var(--tracking-copy); color: var(--alre-grey);
+    padding: 8px 10px; border: 1px solid var(--border-2); border-radius: var(--radius-input); background: var(--alre-white); }
+  input[type=file] { font: 300 15px var(--font-sans); color: var(--alre-grey); max-width: 100%; }
+  input[type=file]::file-selector-button { font: 700 14px var(--font-sans); letter-spacing: var(--tracking-copy); color: var(--alre-grey); background: var(--alre-white); border: 1px solid var(--alre-grey); border-radius: 0; padding: 7px 14px; margin-right: 12px; cursor: pointer; }
+  input[type=file]::file-selector-button:hover { background: var(--alre-grey); color: var(--alre-white); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .checks { display: flex; gap: 20px; flex-wrap: wrap; padding-top: 8px; }
+  .checks label { display: inline-flex; gap: 8px; align-items: center; color: var(--alre-grey); font: 300 15px var(--font-sans); letter-spacing: var(--tracking-copy); text-transform: none; margin: 0; }
+  .checks input { accent-color: var(--alre-orange); width: 16px; height: 16px; margin: 0; }
+  button { font: 700 14px/1 var(--font-sans); letter-spacing: var(--tracking-copy); padding: 10px 18px; border-radius: 0; border: 1px solid var(--alre-grey); background: var(--alre-white); color: var(--alre-grey); cursor: pointer; transition: background 150ms var(--ease), color 150ms var(--ease); }
+  button:hover { background: var(--alre-grey); color: var(--alre-white); }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--alre-orange); border-color: var(--alre-orange); color: var(--alre-white); }
+  button.primary:hover { background: var(--alre-orange-press); border-color: var(--alre-orange-press); }
+  button:disabled { background: var(--alre-silver); border-color: var(--grey-300); color: var(--grey-400); cursor: default; transform: none; }
+  button.quiet { border-color: transparent; padding-left: 8px; padding-right: 8px; }
+  button.quiet:hover { border-color: var(--alre-grey); }
+  .hint { font-size: 12px; color: var(--grey-500); }
   .msg { margin-top: 10px; font-size: 14px; }
-  .msg.err { color: var(--danger); }
-  .msg.ok { color: var(--ok); }
-  progress { width: 100%; height: 8px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 13px; color: var(--muted); font-weight: 600; }
-  td.name { word-break: break-word; max-width: 360px; }
-  td .size { color: var(--muted); font-size: 13px; }
-  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
-  .badge.aktiv { background: #dafbe1; color: var(--ok); }
-  .badge.geplant { background: #ddf4ff; color: var(--accent); }
-  .badge.abgelaufen { background: #f1f1f1; color: var(--muted); }
-  tr.abgelaufen td { color: var(--muted); }
-  td.actions { white-space: nowrap; }
-  .edit { display: grid; gap: 8px; }
-  .settings { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
-  @media (max-width: 700px) { th.hide, td.hide { display: none; } }
+  .msg.err { color: var(--alre-orange-press); font-weight: 700; }
+  .msg.ok { color: var(--alre-grey); }
+  progress { width: 100%; height: 6px; margin-top: 12px; appearance: none; border: 0; background: var(--alre-white); }
+  progress::-webkit-progress-bar { background: var(--alre-white); }
+  progress::-webkit-progress-value { background: var(--alre-orange); }
+  progress::-moz-progress-bar { background: var(--alre-orange); }
+
+  table { width: 100%; border-collapse: collapse; font-family: var(--font-data); font-size: 15px; }
+  th, td { text-align: left; padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border-2); vertical-align: top; }
+  th { font-family: var(--font-sans); font-size: 12px; font-weight: 700; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--grey-500); }
+  td.name { word-break: break-word; max-width: 420px; }
+  td.name a { font-weight: 500; text-decoration: none; }
+  td.name a:hover { text-decoration: underline; }
+  td .meta { display: block; color: var(--grey-500); font-size: 13px; margin-top: 2px; }
+  .status { display: inline-block; padding: 2px 8px; font-family: var(--font-sans); font-size: 12px; font-weight: 700; letter-spacing: var(--tracking-copy); text-transform: uppercase; }
+  .status.aktiv { background: var(--alre-orange); color: var(--alre-white); }
+  .status.geplant { background: var(--alre-white); color: var(--alre-grey); border: 1px solid var(--alre-grey); }
+  .status.abgelaufen { background: var(--alre-silver); color: var(--grey-500); }
+  tr.abgelaufen td { color: var(--grey-500); }
+  td.actions { white-space: nowrap; text-align: right; padding-right: 0; }
+  .edit { display: grid; gap: 12px; padding: 12px 0 8px; font-family: var(--font-sans); }
+  .edit .row label { min-width: 130px; margin: 0; }
+  .settings { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+  footer { margin-top: 64px; font-size: 12px; color: var(--grey-500); }
+  @media (max-width: 700px) { th.hide, td.hide { display: none; } header.top .pillars { display: none; } }
 </style>
 </head>
 <body>
-<main>
-  <h1>Bermon Upload</h1>
-  <p class="sub">Videos und Bilder für die Bildschirme. Jede Datei läuft, bis das Datum unter „Anzeigen bis“ erreicht ist, dann verschwindet sie von selbst.</p>
+<div class="page">
+  <header class="top">
+    <img src="alre-logo.svg" alt="alre">
+    <div class="pillars">Gebäudeautomation · Regeltechnik · Sensorik</div>
+  </header>
+  <div class="balken"><span>alre — alles regeln.</span></div>
 
+  <p class="eyebrow">Digital Signage</p>
+  <h1>Bildschirme <span class="thin">Inhalte verwalten</span></h1>
+  <p class="lead">Videos und Bilder für die Bildschirme im Haus. Jede Datei läuft, bis das Datum unter „Anzeigen bis“ erreicht ist, und verschwindet dann von selbst.</p>
+
+  <h2>Hochladen</h2>
   <form class="upload" id="uploadForm">
     <div class="full">
-      <label for="files">Dateien (mp4, mkv, mov, webm, jpg, png, gif)</label>
+      <label for="files">Dateien</label>
       <input type="file" id="files" name="files" multiple required accept=".mp4,.mkv,.mov,.webm,.jpg,.jpeg,.png,.gif">
-      <div class="hint">Dateinamen bestimmen die Reihenfolge, z. B. <code>20261105_Betriebsversammlung.png</code>.</div>
+      <div class="hint">mp4, mkv, mov, webm, jpg, png, gif. Die Dateinamen bestimmen die Reihenfolge, z. B. <code>20261105_Betriebsversammlung.png</code>.</div>
     </div>
     <div>
-      <label>Anzeigen ab (leer = sofort)</label>
-      <div class="row"><input type="date" id="fromDate"><input type="time" id="fromTime" value="06:30"></div>
+      <label>Anzeigen ab</label>
+      <div class="row"><input type="date" id="fromDate"><input type="time" id="fromTime" value="06:30"><span class="hint">leer = sofort</span></div>
     </div>
     <div>
-      <label>Anzeigen bis (leer = unbegrenzt)</label>
-      <div class="row"><input type="date" id="untilDate"><input type="time" id="untilTime" value="17:30"></div>
+      <label>Anzeigen bis</label>
+      <div class="row"><input type="date" id="untilDate"><input type="time" id="untilTime" value="17:30"><span class="hint">leer = unbegrenzt</span></div>
     </div>
     <div>
       <label>Bildschirme</label>
       <div class="checks" id="screens"></div>
     </div>
     <div class="full">
-      <button class="primary" type="submit" id="submitBtn">Hochladen</button>
+      <button class="primary" type="submit" id="submitBtn">Hochladen →</button>
       <progress id="progress" value="0" max="100" hidden></progress>
       <div class="msg" id="uploadMsg"></div>
     </div>
@@ -80,7 +135,7 @@
     <thead><tr>
       <th>Datei</th><th>Bildschirme</th><th class="hide">Ab</th><th>Bis</th><th>Status</th><th></th>
     </tr></thead>
-    <tbody id="items"><tr><td colspan="6" class="hint">Lade…</td></tr></tbody>
+    <tbody id="items"><tr><td colspan="6" class="hint">Lade …</td></tr></tbody>
   </table>
   <p class="hint" id="purgeHint"></p>
 
@@ -93,12 +148,15 @@
     <button id="saveSettings">Speichern</button>
     <span class="msg" id="settingsMsg"></span>
   </div>
-</main>
+
+  <footer>ALRE-IT Regeltechnik GmbH · Bildschirme übernehmen Änderungen innerhalb von etwa 5 Minuten.</footer>
+</div>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
   let config = { screens: [], settings: {} };
+  const labelOf = (id) => (config.screens.find((s) => s.id === id) || { label: id }).label;
 
   const fmt = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
   const fmtWhen = (iso) => (iso ? fmt.format(new Date(iso)) : "–");
@@ -124,16 +182,17 @@
     for (const s of config.screens) {
       const l = document.createElement("label");
       const c = document.createElement("input");
-      c.type = "checkbox"; c.value = s; c.checked = selected.includes(s); c.name = prefix;
-      l.append(c, " ", s);
+      c.type = "checkbox"; c.value = s.id; c.checked = selected.includes(s.id); c.name = prefix;
+      l.append(c, s.label);
       container.append(l);
     }
   }
   const checkedScreens = (container) => [...container.querySelectorAll("input:checked")].map((c) => c.value);
+  const allScreenIds = () => config.screens.map((s) => s.id);
 
   async function loadConfig() {
     config = await api("/api/config");
-    screenChecks($("screens"), config.screens, "screens");
+    screenChecks($("screens"), allScreenIds(), "screens");
     $("imageDuration").value = config.settings.imageDuration;
     $("purgeHint").textContent = `Abgelaufene Dateien bleiben ${config.purgeDays} Tage in der Liste (das Datum lässt sich verlängern) und werden dann gelöscht.`;
   }
@@ -153,12 +212,12 @@
     const tr = document.createElement("tr");
     tr.className = it.status;
     tr.innerHTML = `
-      <td class="name"><a href="${it.url}" target="_blank" rel="noopener">${esc(it.name)}</a><br><span class="size">${fmtSize(it.size)} · hochgeladen ${fmtWhen(it.uploadedAt)}</span></td>
-      <td>${it.screens.map(esc).join(", ")}</td>
+      <td class="name"><a href="${it.url}" target="_blank" rel="noopener">${esc(it.name)}</a><span class="meta">${fmtSize(it.size)} · hochgeladen ${fmtWhen(it.uploadedAt)}</span></td>
+      <td>${it.screens.map((s) => esc(labelOf(s))).join(", ")}</td>
       <td class="hide">${fmtWhen(it.showFrom)}</td>
       <td>${it.showUntil ? fmtWhen(it.showUntil) : "unbegrenzt"}</td>
-      <td><span class="badge ${it.status}">${it.status}</span></td>
-      <td class="actions"><button data-act="edit">Ändern</button> <button data-act="del" class="danger">Löschen</button></td>`;
+      <td><span class="status ${it.status}">${it.status}</span></td>
+      <td class="actions"><button class="quiet" data-act="edit">Ändern</button> <button class="quiet" data-act="del">Löschen</button></td>`;
     tr.querySelector('[data-act="edit"]').onclick = () => editRow(tr, it);
     tr.querySelector('[data-act="del"]').onclick = async () => {
       if (!confirm(`„${it.name}“ löschen?`)) return;
@@ -174,12 +233,11 @@
     td.innerHTML = `
       <div class="edit">
         <div><strong>${esc(it.name)}</strong></div>
-        <div class="row"><label style="margin:0;min-width:110px">Anzeigen ab</label>
-          <input type="date" name="fromDate" value="${toLocalDate(it.showFrom)}"><input type="time" name="fromTime" value="${toLocalTime(it.showFrom) || "06:30"}"></div>
-        <div class="row"><label style="margin:0;min-width:110px">Anzeigen bis</label>
-          <input type="date" name="untilDate" value="${toLocalDate(it.showUntil)}"><input type="time" name="untilTime" value="${toLocalTime(it.showUntil) || "17:30"}">
-          <span class="hint">leer = unbegrenzt</span></div>
-        <div class="row"><label style="margin:0;min-width:110px">Bildschirme</label><span class="checks" name="screens"></span></div>
+        <div class="row"><label>Anzeigen ab</label>
+          <input type="date" name="fromDate" value="${toLocalDate(it.showFrom)}"><input type="time" name="fromTime" value="${toLocalTime(it.showFrom) || "06:30"}"><span class="hint">leer = sofort</span></div>
+        <div class="row"><label>Anzeigen bis</label>
+          <input type="date" name="untilDate" value="${toLocalDate(it.showUntil)}"><input type="time" name="untilTime" value="${toLocalTime(it.showUntil) || "17:30"}"><span class="hint">leer = unbegrenzt</span></div>
+        <div class="row"><label>Bildschirme</label><span class="checks" name="screens"></span></div>
         <div class="row"><button class="primary" name="save">Speichern</button><button name="cancel">Abbrechen</button><span class="msg" name="msg"></span></div>
       </div>`;
     const q = (n) => td.querySelector(`[name="${n}"]`);
@@ -219,7 +277,7 @@
     const prog = $("progress");
     $("submitBtn").disabled = true;
     prog.hidden = false; prog.value = 0;
-    showMsg($("uploadMsg"), "Lade hoch…");
+    showMsg($("uploadMsg"), "Lade hoch …");
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) prog.value = Math.round((e.loaded / e.total) * 100); };
     xhr.onerror = () => done(new Error("Verbindung abgebrochen"));
     xhr.onload = () => {
@@ -235,10 +293,10 @@
       $("submitBtn").disabled = false;
       prog.hidden = true;
       if (err) return showMsg($("uploadMsg"), err.message, "err");
-      showMsg($("uploadMsg"), `${count} Datei(en) hochgeladen. Die Bildschirme übernehmen Änderungen innerhalb von etwa 5 Minuten.`, "ok");
+      showMsg($("uploadMsg"), `${count} Datei(en) hochgeladen. Die Bildschirme übernehmen die Änderung innerhalb von etwa 5 Minuten.`, "ok");
       $("uploadForm").reset();
       $("fromTime").value = "06:30"; $("untilTime").value = "17:30";
-      screenChecks($("screens"), config.screens, "screens");
+      screenChecks($("screens"), allScreenIds(), "screens");
       await loadItems();
     }
   };

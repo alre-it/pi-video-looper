@@ -25,6 +25,11 @@ const FILES_DIR = path.join(DATA_DIR, "files");
 const ITEMS_FILE = path.join(DATA_DIR, "items.json");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 const SCREENS = (process.env.SCREENS || "bermon01,bermon02").split(",").map((s) => s.trim()).filter(Boolean);
+// Display names for the page; the Pis keep using their hostnames as ids.
+// SCREEN_LABELS="bermon01=Eingang,bermon02=Pausenraum EG"
+const SCREEN_LABELS = Object.fromEntries(
+  (process.env.SCREEN_LABELS || "").split(",").map((pair) => pair.split("=").map((s) => s.trim())).filter(([id, label]) => id && label),
+);
 const AUTH_USER = process.env.AUTH_USER || "";
 const AUTH_PASS = process.env.AUTH_PASS || "";
 // Expired items stay listed (so the window can be extended) and are removed
@@ -202,7 +207,9 @@ app.use(basicAuth);
 app.use(express.static(path.join(__dirname, "public"), { etag: false, lastModified: false, cacheControl: false }));
 app.use(express.json());
 
-app.get("/api/config", (req, res) => res.json({ screens: SCREENS, settings, purgeDays: PURGE_DAYS }));
+app.get("/api/config", (req, res) =>
+  res.json({ screens: SCREENS.map((id) => ({ id, label: SCREEN_LABELS[id] || id })), settings, purgeDays: PURGE_DAYS }),
+);
 
 app.get("/api/items", (req, res) => {
   const now = Date.now();

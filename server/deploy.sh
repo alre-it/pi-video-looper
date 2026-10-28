@@ -25,7 +25,8 @@ if [ ! -e .env ]; then
   umask 077
   cat > .env <<ENV
 PORT=8300
-SCREENS=bermon01,bermon02
+SCREENS=bermon01,bermon02,bermon03
+SCREEN_LABELS=bermon01=Eingang,bermon02=Pausenraum EG,bermon03=Pausenraum OG
 AUTH_USER=bermon
 AUTH_PASS=$pass
 DATA_DIR=$HOME/bermon-upload-data

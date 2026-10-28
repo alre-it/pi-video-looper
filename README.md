@@ -32,7 +32,9 @@ the number of seconds set under "Einstellungen" on the upload page (default 240)
 
 The upload page has no login: anyone on the office LAN can change what the
 screens show (decided 2026-10-28). Set `AUTH_USER`/`AUTH_PASS` in the server's
-`.env` to turn HTTP basic auth back on.
+`.env` to turn HTTP basic auth back on. The page follows the alre design system
+(CI manual 11/2023 tokens: orange `#eb7300`, grey `#373a3b`, silver, sharp
+corners, hairlines, the 8° Farbbalken); the logo is `public/alre-logo.svg`.
 
 An upload reaches the screen within about 4 minutes: up to 2 min until the sync
 timer fetches it, up to 2 more until the scan timer restarts the looper.
@@ -55,7 +57,8 @@ cd server && ./deploy.sh espo@upload-server
 ```
 
 It rsyncs to `~/bermon-upload`, creates `~/bermon-upload/.env` on first run (port,
-screens, `AUTH_USER`/`AUTH_PASS`, `DATA_DIR=~/bermon-upload-data`) and installs
+`SCREENS` = the Pis' hostnames, `SCREEN_LABELS` = the names people see
+(`bermon01=Eingang,…`), `AUTH_USER`/`AUTH_PASS`, `DATA_DIR=~/bermon-upload-data`) and installs
 `bermon-upload.service` as a rootless user unit (needs linger). Password: see that
 `.env`. Data is only in `~/bermon-upload-data`; it is not backed up anywhere.
 
