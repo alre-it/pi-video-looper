@@ -49,4 +49,10 @@ systemctl enable select-hours-target.service work-hours-on.timer work-hours-off.
 systemctl enable --now sync-media.timer
 systemctl enable video-looper.service scan-video-folder.timer screen-blank.service
 
+# Fetch the media now, and if the screen is on, restart the looper on it.
+systemctl start sync-media.service || echo "WARNING: first sync failed, is $server reachable?" >&2
+if systemctl is-active -q work-hours.target; then
+  systemctl --no-block restart video-looper.service
+fi
+
 echo "Installed. Media is mirrored from $server to $media; reboot to start in the right mode for the time of day."
