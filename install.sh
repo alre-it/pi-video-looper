@@ -37,7 +37,7 @@ install -d -o "$user" -g "$user" -m 755 "$media"
 # Earlier versions played an SMB share mounted at /mnt/videos.
 if [ -e /etc/systemd/system/mnt-videos.mount ]; then
   systemctl disable mnt-videos.mount 2>/dev/null || true
-  umount /mnt/videos 2>/dev/null || true   # "disable --now" left it mounted
+  umount -l /mnt/videos 2>/dev/null || true   # lazy: the old looper still has it as cwd
   rm -f /etc/systemd/system/mnt-videos.mount
   echo "NOTE: the SMB mount is gone; /etc/smbcredentials can be deleted." >&2
 fi

@@ -9,7 +9,7 @@ there, pick the screens and a "show from" / "show until" window, and each Pi
 mirrors whatever is active for it. Nothing has to be deleted by hand; a file
 drops off the screens when its window ends.
 
-Runs on `bermon01` and `bermon02` (Raspberry Pi 5, Raspberry Pi OS Lite, bookworm);
+Runs on `bermon01`, `bermon02` and `bermon03` (Raspberry Pi 5, Raspberry Pi OS Lite, bookworm);
 the server runs on espocrm2 (`http://upload-server:8300`).
 
 ## How it works
@@ -29,6 +29,10 @@ Media: `mp4 mkv mov webm jpg jpeg png gif`, played in natural filename order
 (prefix files with a date or number to order them). Still images stay on screen for
 the number of seconds set under "Einstellungen" on the upload page (default 240);
 `sync-media.sh` writes it to `image_display_duration_sec.txt` next to the media.
+
+The upload page has no login: anyone on the office LAN can change what the
+screens show (decided 2026-10-28). Set `AUTH_USER`/`AUTH_PASS` in the server's
+`.env` to turn HTTP basic auth back on.
 
 An upload reaches the screen within about 4 minutes: up to 2 min until the sync
 timer fetches it, up to 2 more until the scan timer restarts the looper.
