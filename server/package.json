@@ -1,0 +1,18 @@
+{
+  "name": "bermon-upload",
+  "version": "1.0.0",
+  "description": "Upload page and playlist server for the bermon signage Pis",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  }
+}

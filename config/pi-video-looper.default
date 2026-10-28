@@ -1,4 +1,10 @@
-# /etc/default/pi-video-looper: the work-hours window used at boot.
+# /etc/default/pi-video-looper
+# Upload server the media is mirrored from (sync-media.sh); set by install.sh.
+SIGNAGE_SERVER=http://upload-server:8300
+# Local mirror the looper plays from.
+MEDIA_DIR=/var/lib/pi-video-looper/media
+
+# The work-hours window used at boot.
 # Keep it in step with the OnCalendar= times in work-hours-on/-off.timer.
 WORK_DAYS_MAX=5     # 1=Mon .. 7=Sun; 5 means Mon-Fri
 WORK_START=0630

@@ -1,0 +1,17 @@
+# Installed by deploy.sh as ~/.config/systemd/user/bermon-upload.service
+# on the host that serves the Pis (user espo on espocrm2).
+[Unit]
+Description=Bermon signage upload page and playlist server
+After=network.target
+
+[Service]
+WorkingDirectory=%h/bermon-upload
+EnvironmentFile=%h/bermon-upload/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=TZ=Europe/Berlin
+
+[Install]
+WantedBy=default.target

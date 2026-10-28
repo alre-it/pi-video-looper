@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bermon Upload</title>
+<style>
+  :root { --fg: #1f2328; --muted: #6b7280; --line: #d0d7de; --bg: #f6f8fa; --accent: #0b5cad; --danger: #b42318; --ok: #1a7f37; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: #fff; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 32px 0 10px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  form.upload { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  form.upload .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  input[type=date], input[type=time], input[type=number], input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  input[type=file] { font: inherit; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .checks { display: flex; gap: 14px; padding-top: 6px; }
+  .checks label { display: inline-flex; gap: 6px; align-items: center; color: var(--fg); font-size: 15px; margin: 0; }
+  button { font: inherit; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.danger { color: var(--danger); }
+  button:disabled { opacity: .5; cursor: default; }
+  .hint { font-size: 13px; color: var(--muted); }
+  .msg { margin-top: 10px; font-size: 14px; }
+  .msg.err { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+  progress { width: 100%; height: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  td.name { word-break: break-word; max-width: 360px; }
+  td .size { color: var(--muted); font-size: 13px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .badge.aktiv { background: #dafbe1; color: var(--ok); }
+  .badge.geplant { background: #ddf4ff; color: var(--accent); }
+  .badge.abgelaufen { background: #f1f1f1; color: var(--muted); }
+  tr.abgelaufen td { color: var(--muted); }
+  td.actions { white-space: nowrap; }
+  .edit { display: grid; gap: 8px; }
+  .settings { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  @media (max-width: 700px) { th.hide, td.hide { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bermon Upload</h1>
+  <p class="sub">Videos und Bilder für die Bildschirme. Jede Datei läuft, bis das Datum unter „Anzeigen bis“ erreicht ist, dann verschwindet sie von selbst.</p>
+
+  <form class="upload" id="uploadForm">
+    <div class="full">
+      <label for="files">Dateien (mp4, mkv, mov, webm, jpg, png, gif)</label>
+      <input type="file" id="files" name="files" multiple required accept=".mp4,.mkv,.mov,.webm,.jpg,.jpeg,.png,.gif">
+      <div class="hint">Dateinamen bestimmen die Reihenfolge, z. B. <code>20261105_Betriebsversammlung.png</code>.</div>
+    </div>
+    <div>
+      <label>Anzeigen ab (leer = sofort)</label>
+      <div class="row"><input type="date" id="fromDate"><input type="time" id="fromTime" value="06:30"></div>
+    </div>
+    <div>
+      <label>Anzeigen bis (leer = unbegrenzt)</label>
+      <div class="row"><input type="date" id="untilDate"><input type="time" id="untilTime" value="17:30"></div>
+    </div>
+    <div>
+      <label>Bildschirme</label>
+      <div class="checks" id="screens"></div>
+    </div>
+    <div class="full">
+      <button class="primary" type="submit" id="submitBtn">Hochladen</button>
+      <progress id="progress" value="0" max="100" hidden></progress>
+      <div class="msg" id="uploadMsg"></div>
+    </div>
+  </form>
+
+  <h2>Dateien</h2>
+  <table>
+    <thead><tr>
+      <th>Datei</th><th>Bildschirme</th><th class="hide">Ab</th><th>Bis</th><th>Status</th><th></th>
+    </tr></thead>
+    <tbody id="items"><tr><td colspan="6" class="hint">Lade…</td></tr></tbody>
+  </table>
+  <p class="hint" id="purgeHint"></p>
+
+  <h2>Einstellungen</h2>
+  <div class="settings">
+    <div>
+      <label for="imageDuration">Anzeigedauer pro Bild (Sekunden)</label>
+      <input type="number" id="imageDuration" min="5" max="3600" step="1">
+    </div>
+    <button id="saveSettings">Speichern</button>
+    <span class="msg" id="settingsMsg"></span>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let config = { screens: [], settings: {} };
+
+  const fmt = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
+  const fmtWhen = (iso) => (iso ? fmt.format(new Date(iso)) : "–");
+  const fmtSize = (b) => (b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.round(b / 1e3) + " kB");
+  const pad = (n) => String(n).padStart(2, "0");
+  const toLocalDate = (iso) => { if (!iso) return ""; const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  const toLocalTime = (iso) => { if (!iso) return ""; const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  // date + time inputs → ISO (local time zone of the browser); empty date = unset
+  const combine = (date, time) => (date ? new Date(`${date}T${time || "00:00"}`).toISOString() : "");
+
+  async function api(url, opts = {}) {
+    const res = await fetch(url, opts);
+    if (res.status === 204) return null;
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `${res.status} ${res.statusText}`);
+    return body;
+  }
+
+  function showMsg(el, text, cls) { el.textContent = text; el.className = `msg ${cls || ""}`; }
+
+  function screenChecks(container, selected, prefix) {
+    container.innerHTML = "";
+    for (const s of config.screens) {
+      const l = document.createElement("label");
+      const c = document.createElement("input");
+      c.type = "checkbox"; c.value = s; c.checked = selected.includes(s); c.name = prefix;
+      l.append(c, " ", s);
+      container.append(l);
+    }
+  }
+  const checkedScreens = (container) => [...container.querySelectorAll("input:checked")].map((c) => c.value);
+
+  async function loadConfig() {
+    config = await api("/api/config");
+    screenChecks($("screens"), config.screens, "screens");
+    $("imageDuration").value = config.settings.imageDuration;
+    $("purgeHint").textContent = `Abgelaufene Dateien bleiben ${config.purgeDays} Tage in der Liste (das Datum lässt sich verlängern) und werden dann gelöscht.`;
+  }
+
+  async function loadItems() {
+    const list = await api("/api/items");
+    const tbody = $("items");
+    tbody.innerHTML = "";
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="hint">Noch keine Dateien.</td></tr>';
+      return;
+    }
+    for (const it of list) tbody.append(row(it));
+  }
+
+  function row(it) {
+    const tr = document.createElement("tr");
+    tr.className = it.status;
+    tr.innerHTML = `
+      <td class="name"><a href="${it.url}" target="_blank" rel="noopener">${esc(it.name)}</a><br><span class="size">${fmtSize(it.size)} · hochgeladen ${fmtWhen(it.uploadedAt)}</span></td>
+      <td>${it.screens.map(esc).join(", ")}</td>
+      <td class="hide">${fmtWhen(it.showFrom)}</td>
+      <td>${it.showUntil ? fmtWhen(it.showUntil) : "unbegrenzt"}</td>
+      <td><span class="badge ${it.status}">${it.status}</span></td>
+      <td class="actions"><button data-act="edit">Ändern</button> <button data-act="del" class="danger">Löschen</button></td>`;
+    tr.querySelector('[data-act="edit"]').onclick = () => editRow(tr, it);
+    tr.querySelector('[data-act="del"]').onclick = async () => {
+      if (!confirm(`„${it.name}“ löschen?`)) return;
+      try { await api(`/api/items/${it.id}`, { method: "DELETE" }); await loadItems(); }
+      catch (e) { alert(e.message); }
+    };
+    return tr;
+  }
+
+  function editRow(tr, it) {
+    const td = document.createElement("td");
+    td.colSpan = 6;
+    td.innerHTML = `
+      <div class="edit">
+        <div><strong>${esc(it.name)}</strong></div>
+        <div class="row"><label style="margin:0;min-width:110px">Anzeigen ab</label>
+          <input type="date" name="fromDate" value="${toLocalDate(it.showFrom)}"><input type="time" name="fromTime" value="${toLocalTime(it.showFrom) || "06:30"}"></div>
+        <div class="row"><label style="margin:0;min-width:110px">Anzeigen bis</label>
+          <input type="date" name="untilDate" value="${toLocalDate(it.showUntil)}"><input type="time" name="untilTime" value="${toLocalTime(it.showUntil) || "17:30"}">
+          <span class="hint">leer = unbegrenzt</span></div>
+        <div class="row"><label style="margin:0;min-width:110px">Bildschirme</label><span class="checks" name="screens"></span></div>
+        <div class="row"><button class="primary" name="save">Speichern</button><button name="cancel">Abbrechen</button><span class="msg" name="msg"></span></div>
+      </div>`;
+    const q = (n) => td.querySelector(`[name="${n}"]`);
+    screenChecks(q("screens"), it.screens, "edit-screens");
+    q("cancel").onclick = () => loadItems();
+    q("save").onclick = async () => {
+      try {
+        await api(`/api/items/${it.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            showFrom: combine(q("fromDate").value, q("fromTime").value),
+            showUntil: combine(q("untilDate").value, q("untilTime").value),
+            screens: checkedScreens(q("screens")),
+          }),
+        });
+        await loadItems();
+      } catch (e) { showMsg(q("msg"), e.message, "err"); }
+    };
+    tr.innerHTML = "";
+    tr.append(td);
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+  $("uploadForm").onsubmit = (ev) => {
+    ev.preventDefault();
+    const files = $("files").files;
+    if (!files.length) return;
+    const fd = new FormData();
+    for (const f of files) fd.append("files", f);
+    fd.append("showFrom", combine($("fromDate").value, $("fromTime").value));
+    fd.append("showUntil", combine($("untilDate").value, $("untilTime").value));
+    for (const s of checkedScreens($("screens"))) fd.append("screens", s);
+
+    const xhr = new XMLHttpRequest();
+    const prog = $("progress");
+    $("submitBtn").disabled = true;
+    prog.hidden = false; prog.value = 0;
+    showMsg($("uploadMsg"), "Lade hoch…");
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) prog.value = Math.round((e.loaded / e.total) * 100); };
+    xhr.onerror = () => done(new Error("Verbindung abgebrochen"));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) return done(null, JSON.parse(xhr.responseText).length);
+      let msg = `${xhr.status} ${xhr.statusText}`;
+      try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+      done(new Error(msg));
+    };
+    xhr.open("POST", "/api/items");
+    xhr.send(fd);
+
+    async function done(err, count) {
+      $("submitBtn").disabled = false;
+      prog.hidden = true;
+      if (err) return showMsg($("uploadMsg"), err.message, "err");
+      showMsg($("uploadMsg"), `${count} Datei(en) hochgeladen. Die Bildschirme übernehmen Änderungen innerhalb von etwa 5 Minuten.`, "ok");
+      $("uploadForm").reset();
+      $("fromTime").value = "06:30"; $("untilTime").value = "17:30";
+      screenChecks($("screens"), config.screens, "screens");
+      await loadItems();
+    }
+  };
+
+  $("saveSettings").onclick = async () => {
+    try {
+      const s = await api("/api/settings", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ imageDuration: Number($("imageDuration").value) }) });
+      config.settings = s;
+      showMsg($("settingsMsg"), "Gespeichert.", "ok");
+    } catch (e) { showMsg($("settingsMsg"), e.message, "err"); }
+  };
+
+  loadConfig().then(loadItems).catch((e) => showMsg($("uploadMsg"), e.message, "err"));
+})();
+</script>
+</body>
+</html>

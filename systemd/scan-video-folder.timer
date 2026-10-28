@@ -1,5 +1,5 @@
 [Unit]
-Description=Scan the video share every two minutes
+Description=Scan the media directory every two minutes
 PartOf=work-hours.target
 
 [Timer]

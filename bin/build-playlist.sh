@@ -2,7 +2,7 @@
 # Write an m3u of every video and image in DIR, in natural sort order.
 # Exits non-zero when there is nothing to play.
 set -eu
-dir=${1:-/mnt/videos}
+dir=${1:-/var/lib/pi-video-looper/media}
 out=${2:-/run/playlist.m3u}
 
 list=$(find "$dir" -maxdepth 1 -type f \

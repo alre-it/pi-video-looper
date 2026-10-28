@@ -1,6 +1,6 @@
 [Unit]
 Description=Select work-hours or night-hours target at boot
-After=time-sync.target mnt-videos.mount
+After=time-sync.target
 Wants=time-sync.target
 
 [Service]

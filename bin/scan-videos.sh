@@ -1,34 +1,22 @@
-#!/usr/bin/env bash
-set -Eeuo pipefail
+#!/bin/sh
+# Restart the looper when the media directory changed since the last run, so
+# the playlist is rebuilt. Compares a fingerprint of name, size and mtime of
+# every file (including image_display_duration_sec.txt).
+set -eu
 export LC_ALL=C
 
-DIR="/mnt/videos"
-STATE="/run/videos.atime_count"   # "MAX_ATIME:COUNT"
+DIR=${MEDIA_DIR:-/var/lib/pi-video-looper/media}
+STATE=/run/videos.fingerprint
 
-# Share mounted?
-if command -v mountpoint >/dev/null 2>&1; then
-  mountpoint -q "$DIR" || exit 0
-else
-  [[ -d "$DIR" ]] || exit 0
-fi
+[ -d "$DIR" ] || exit 0
 
-VIDEO_EXPR=( -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.mov' -o -iname '*.avi' -o -iname '*.webm' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' )
+NEW=$(find "$DIR" -maxdepth 1 -type f -printf '%f %s %T@\n' | sort | md5sum | cut -d' ' -f1)
+OLD=$(cat "$STATE" 2>/dev/null || echo none)
 
-MAX_ATIME=$(LC_ALL=C find "$DIR" -type f \( "${VIDEO_EXPR[@]}" \) -printf '%A@\n' 2>/dev/null | sort -n | tail -1)
-MAX_ATIME=${MAX_ATIME:-0}
-COUNT=$(find "$DIR" -type f \( "${VIDEO_EXPR[@]}" \) 2>/dev/null | wc -l | tr -d '[:space:]')
-COUNT=${COUNT:-0}
-NEW="${MAX_ATIME}:${COUNT}"
-
-OLD="0:0"
-if [[ -r "$STATE" ]]; then
-  IFS= read -r OLD < "$STATE" || OLD="0:0"
-fi
-
-if [[ "$NEW" != "$OLD" ]]; then
+if [ "$NEW" != "$OLD" ]; then
   printf '%s\n' "$NEW" > "$STATE"
-  echo "Change detected (atime/count: $OLD -> $NEW). Restarting video-looper.service"
+  echo "Change detected, restarting video-looper.service"
   systemctl --no-block try-restart video-looper.service || true
 else
-  echo "Nothing changed (${NEW})."
+  echo "Nothing changed."
 fi

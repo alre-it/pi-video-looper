@@ -1,8 +1,8 @@
 [Unit]
-Description=Restart the looper when files on the share change
-After=network-online.target mnt-videos.mount
-Wants=network-online.target
+Description=Restart the looper when the media directory changes
+After=sync-media.service
 
 [Service]
 Type=oneshot
+EnvironmentFile=-/etc/default/pi-video-looper
 ExecStart=/usr/local/bin/scan-videos.sh

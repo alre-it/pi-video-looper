@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync media from the upload server every two minutes
+
+# Runs day and night (not PartOf=work-hours.target) so the morning starts
+# with yesterday evening's uploads already on disk.
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=2m
+
+[Install]
+WantedBy=timers.target

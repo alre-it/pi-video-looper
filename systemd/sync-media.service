@@ -1,0 +1,10 @@
+[Unit]
+Description=Mirror the playlist for this screen from the upload server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=tv
+EnvironmentFile=-/etc/default/pi-video-looper
+ExecStart=/usr/local/bin/sync-media.sh
