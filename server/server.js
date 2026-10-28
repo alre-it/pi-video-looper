@@ -106,6 +106,7 @@ function badRequest(message) {
 }
 
 function status(item, now = Date.now()) {
+  if (item.enabled === false) return "deaktiviert";
   if (item.showFrom && now < Date.parse(item.showFrom)) return "geplant";
   if (item.showUntil && now >= Date.parse(item.showUntil)) return "abgelaufen";
   return "aktiv";
@@ -213,7 +214,7 @@ app.get("/api/config", (req, res) =>
 
 app.get("/api/items", (req, res) => {
   const now = Date.now();
-  const order = { aktiv: 0, geplant: 1, abgelaufen: 2 };
+  const order = { aktiv: 0, geplant: 1, deaktiviert: 2, abgelaufen: 3 };
   const list = items.map(withStatus).sort((a, b) => {
     const s = order[status(a, now)] - order[status(b, now)];
     return s || a.name.localeCompare(b.name, "de", { numeric: true });
@@ -265,6 +266,7 @@ app.post("/api/items", upload.array("files", 50), (req, res, next) => {
       showFrom,
       showUntil,
       screens,
+      enabled: true,
     }));
     items.push(...created);
     saveItems();
@@ -284,6 +286,7 @@ app.patch("/api/items/:id", (req, res, next) => {
     if ("showUntil" in body) next_.showUntil = parseWhen(body.showUntil);
     if ("screens" in body) next_.screens = parseScreens(body.screens);
     if ("name" in body) next_.name = safeName(body.name);
+    if ("enabled" in body) next_.enabled = Boolean(body.enabled);
     if (next_.showFrom && next_.showUntil && next_.showUntil <= next_.showFrom) {
       throw badRequest('"Anzeigen bis" liegt vor "Anzeigen ab"');
     }

@@ -43,7 +43,8 @@ timer fetches it, up to 2 more until the scan timer restarts the looper.
 
 `server/` is a small Node app (express + multer, Node ≥ 18): a German upload page
 with HTTP basic auth, a JSON list of items (`items.json`) and the files under
-`DATA_DIR/files`. Per item: screens, `showFrom`, `showUntil`. The Pis poll
+`DATA_DIR/files`. Per item: screens, `showFrom`, `showUntil`, `enabled` (Deaktivieren
+parks a file without deleting it). The Pis poll
 `GET /api/screens/<name>/manifest` (plain text, one `id<TAB>name` line per active
 file, plus `#IMAGE_DISPLAY_DURATION=`) and download `/media/<id>`; those two routes
 need no auth. Expired items stay in the list for `PURGE_DAYS` (30) so the window
