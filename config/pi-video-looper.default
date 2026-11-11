@@ -6,6 +6,10 @@ MEDIA_DIR=/var/lib/pi-video-looper/media
 
 # The work-hours window used at boot.
 # Keep it in step with the OnCalendar= times in work-hours-on/-off.timer.
-WORK_DAYS_MAX=5     # 1=Mon .. 7=Sun; 5 means Mon-Fri
+# systemd reads this file as an EnvironmentFile=, which does NOT strip trailing
+# comments: anything after the value becomes part of it. Comments go on their
+# own line.
+# WORK_DAYS_MAX: 1=Mon .. 7=Sun; 5 means Mon-Fri.
+WORK_DAYS_MAX=5
 WORK_START=0630
 WORK_END=1730
