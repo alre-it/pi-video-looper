@@ -7,6 +7,8 @@ PartOf=work-hours.target
 User=tv
 WorkingDirectory=/var/lib/pi-video-looper/media
 
+# AUDIO / AUDIO_DEVICE come from /etc/default/pi-video-looper.
+EnvironmentFile=-/etc/default/pi-video-looper
 # Seconds each still image stays on screen. sync-media.sh writes the value
 # from the upload server's settings into image_display_duration_sec.txt.
 Environment=IMAGE_DISPLAY_DURATION=240
@@ -23,14 +25,7 @@ TTYVTDisallocate=yes
 
 ExecStartPre=+/usr/bin/chvt 1
 ExecStartPre=+/usr/local/bin/build-playlist.sh /var/lib/pi-video-looper/media /run/playlist.m3u
-ExecStart=/usr/bin/mpv \
-      --no-resume-playback --playlist-start=0 --start=0 \
-      --no-audio --fs --loop-playlist=inf --no-osd-bar \
-      --image-display-duration=${IMAGE_DISPLAY_DURATION} \
-      --no-terminal \
-      --gpu-context=drm --drm-mode=preferred \
-      --hwdec=auto-safe \
-      /run/playlist.m3u
+ExecStart=/usr/local/bin/play-loop.sh /run/playlist.m3u
 
 Restart=always
 RestartSec=5

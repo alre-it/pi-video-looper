@@ -12,6 +12,10 @@ drops off the screens when its window ends.
 Runs on `bermon01`, `bermon02` and `bermon03` (Raspberry Pi 5, Raspberry Pi OS Lite, bookworm);
 the upload server runs on espocrm2, port 8300.
 
+**Museum mode** (`install.sh --museum`) is the same player for a screen with no
+server and no schedule: it plays the videos from a USB stick, with sound, whenever
+the Pi is on. See [Museum mode](#museum-mode).
+
 ## How it works
 
 | Piece | What it does |
@@ -21,7 +25,7 @@ the upload server runs on espocrm2, port 8300.
 | `work-hours-on.timer` | Mon-Fri 06:30 → `work-hours.target`. |
 | `work-hours-off.timer` | Mon-Fri 17:30 → `night-hours.target`. |
 | `select-hours-target.service` | At boot, picks the mode for the current time (window in `/etc/default/pi-video-looper`). |
-| `video-looper.service` | Builds `/run/playlist.m3u` from the media directory and plays it with `mpv` in an endless loop. Part of work hours. |
+| `video-looper.service` | Builds `/run/playlist.m3u` from the media directory and plays it with `mpv` (`play-loop.sh`) in an endless loop. Part of work hours. |
 | `scan-video-folder.timer` | Every 2 min: if the media directory changed, restarts the looper so the playlist is rebuilt. |
 | `screen-blank.service` | Keeps `kmsblank` running all night, so the TV gets no signal and drops into standby. |
 
@@ -80,13 +84,56 @@ still has the old SMB mount disables and removes it.
 If the work window changes, edit both the `OnCalendar=` lines in
 `systemd/work-hours-*.timer` and `/etc/default/pi-video-looper`.
 
+## Museum mode
+
+```sh
+git clone <this repo> && cd pi-video-looper
+sudo ./install.sh --museum
+sudo reboot
+```
+
+`--museum` is short for `--usb --audio --always-on`; each can also be given on
+its own. They set three lines in `/etc/default/pi-video-looper`. Options not given
+keep the value that is already there, and a config without the lines means the
+office behaviour (server, silent, work hours), so re-running `install.sh` on the
+office Pis changes nothing.
+
+| Setting | Office (default) | Museum |
+|---|---|---|
+| `MEDIA_SOURCE` | `server`: mirror the upload page | `usb`: mirror a USB stick |
+| `AUDIO` | `no` | `yes`, on `AUDIO_DEVICE` (default `auto`) |
+| `SCHEDULE` | `work-hours`: Mon-Fri 06:30-17:30 | `always`: plays whenever the Pi is on |
+
+**Changing the videos:** put the files on a USB stick (top level, no folders;
+the same formats and natural filename order as above) and plug it in. Every 2
+minutes `sync-usb.sh` mounts the stick read-only, copies new and changed files
+into `/var/lib/pi-video-looper/media`, deletes files that are no longer on the
+stick, and unmounts it again; the scan timer then restarts the looper. New videos
+are on screen within about 4 minutes, plus the copy time. The stick can stay in
+or be pulled at any time: the Pi always plays its local copy. A stick without
+any media files (the wrong stick, an empty one) changes nothing.
+
+Mounting needs root, so in USB mode `install.sh` adds
+`/etc/systemd/system/sync-media.service.d/usb.conf` with `User=root`; the server
+sync stays unprivileged.
+
+**Sound** goes out over HDMI to the TV; set the volume on the TV. If there is no
+sound, list the devices with `mpv --audio-device=help` and set e.g.
+`AUDIO_DEVICE=alsa/hdmi:CARD=vc4hdmi0,DEV=0` (the HDMI port next to the USB-C
+power socket on a Pi 5) in `/etc/default/pi-video-looper`, then
+`sudo systemctl restart video-looper`.
+
+**Always on** disables `work-hours-on/-off.timer`, and `select-hours-target`
+starts `work-hours.target` at every boot. Switching the TV off and on is all
+that is needed; the Pi keeps playing in between.
+
 ## Operating it
 
 ```sh
 systemctl is-active work-hours.target night-hours.target video-looper.service
 systemctl list-timers 'work-hours-*'
 journalctl -b -u video-looper -u select-hours-target -u scan-video-folder -u sync-media
-sudo systemctl start sync-media.service    # fetch now instead of waiting 2 min
+sudo systemctl start sync-media.service    # fetch (or copy from the stick) now instead of waiting 2 min
 ls -la /var/lib/pi-video-looper/media      # what this screen currently has
 sudo systemctl start night-hours.target   # screen off now
 sudo systemctl start work-hours.target    # screen on now
