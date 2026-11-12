@@ -10,7 +10,7 @@ mirrors whatever is active for it. Nothing has to be deleted by hand; a file
 drops off the screens when its window ends.
 
 Runs on `bermon01`, `bermon02` and `bermon03` (Raspberry Pi 5, Raspberry Pi OS Lite, bookworm);
-the server runs on espocrm2 (`http://upload-server:8300`).
+the upload server runs on espocrm2, port 8300.
 
 ## How it works
 
@@ -54,7 +54,7 @@ Deploy (from a box that can reach the host; ships `node_modules`, so the host
 needs no npm):
 
 ```sh
-cd server && ./deploy.sh espo@upload-server
+cd server && ./deploy.sh espo@<server-host>
 ```
 
 It rsyncs to `~/bermon-upload`, creates `~/bermon-upload/.env` on first run (port,
@@ -69,7 +69,7 @@ On a fresh Raspberry Pi OS Lite with a user `tv`:
 
 ```sh
 git clone <this repo> && cd pi-video-looper
-sudo ./install.sh --server http://upload-server:8300
+sudo ./install.sh --server http://<server-host>:8300
 sudo reboot
 ```
 
@@ -116,3 +116,7 @@ Not done by `install.sh`, set up by hand:
 - `kmsblank` blanks only while it is running: it waits for Enter and unblanks when it
   exits. `screen-blank.service` feeds it a stdin that never ends; a plain oneshot exits at
   once and the screen comes straight back.
+
+## License
+
+GPL-3.0-or-later; see [LICENSE](LICENSE).

@@ -1,11 +1,11 @@
 #!/bin/sh
 # Deploy the upload server to its host as a rootless systemd user service.
-#   ./deploy.sh [user@host]        default espo@upload-server
+#   ./deploy.sh user@host
 # Needs: node >= 18 on the host, and loginctl linger for that user so the
 # service starts at boot. node_modules are pure JS and are shipped from here,
 # so the host needs no npm access.
 set -eu
-host=${1:-espo@upload-server}
+host=${1:?usage: deploy.sh user@host}
 here=$(cd "$(dirname "$0")" && pwd)
 
 [ -d "$here/node_modules" ] || (cd "$here" && npm ci --omit=dev)

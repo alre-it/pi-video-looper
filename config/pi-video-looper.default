@@ -1,6 +1,6 @@
 # /etc/default/pi-video-looper
 # Upload server the media is mirrored from (sync-media.sh); set by install.sh.
-SIGNAGE_SERVER=http://upload-server:8300
+SIGNAGE_SERVER=http://<server-host>:8300
 # Local mirror the looper plays from.
 MEDIA_DIR=/var/lib/pi-video-looper/media
 

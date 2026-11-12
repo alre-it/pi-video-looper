@@ -1,6 +1,6 @@
 #!/bin/sh
 # Turn a Raspberry Pi OS Lite install into a headless video/image looper.
-# Run as root on the Pi:  sudo ./install.sh --server http://upload-server:8300
+# Run as root on the Pi:  sudo ./install.sh --server http://<server-host>:8300
 # Re-running is safe; it overwrites the installed units and scripts.
 set -eu
 

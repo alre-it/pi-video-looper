@@ -1,5 +1,6 @@
 {
   "name": "bermon-upload",
+  "license": "GPL-3.0-or-later",
   "version": "1.0.0",
   "description": "Upload page and playlist server for the bermon signage Pis",
   "private": true,
