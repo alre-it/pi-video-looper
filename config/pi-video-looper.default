@@ -17,6 +17,12 @@ MEDIA_DIR=/var/lib/pi-video-looper/media
 AUDIO=no
 AUDIO_DEVICE=auto
 
+# Keep the screen on over HDMI-CEC while the looper runs: no or yes.
+# Sends "Image View On" every CEC_WAKE_INTERVAL seconds; the screen needs
+# CEC enabled in its menu.
+CEC_WAKE=no
+CEC_WAKE_INTERVAL=60
+
 # When the looper runs: work-hours (the window below) or always.
 SCHEDULE=work-hours
 # The work-hours window used at boot.

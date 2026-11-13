@@ -9,15 +9,17 @@ set -eu
 
 usage() {
   cat >&2 <<EOF
-usage: $0 (--server URL | --usb | --usb-direct) [--audio | --no-audio] [--always-on | --work-hours] [--user tv]
-       $0 --museum [--user tv]        same as --usb-direct --audio --always-on
+usage: $0 (--server URL | --usb | --usb-direct) [--audio | --no-audio] [--always-on | --work-hours]
+          [--cec-wake | --no-cec-wake] [--user tv]
+       $0 --museum [--user tv]        same as --usb-direct --audio --always-on --cec-wake
   --usb         copy the media from a USB stick to the Pi
   --usb-direct  play straight from the USB stick (mounted read-only)
+  --cec-wake    keep the screen on over HDMI-CEC while the looper runs
 EOF
   exit 2
 }
 
-server="" source="" audio="" schedule=""
+server="" source="" audio="" schedule="" cec=""
 user=tv
 while [ $# -gt 0 ]; do
   case $1 in
@@ -28,7 +30,9 @@ while [ $# -gt 0 ]; do
     --no-audio)   audio=no; shift ;;
     --always-on)  schedule=always; shift ;;
     --work-hours) schedule=work-hours; shift ;;
-    --museum)     source=usb-direct audio=yes schedule=always; shift ;;
+    --cec-wake)   cec=yes; shift ;;
+    --no-cec-wake) cec=no; shift ;;
+    --museum)     source=usb-direct audio=yes schedule=always cec=yes; shift ;;
     --user)       [ $# -ge 2 ] || usage; user=$2; shift 2 ;;
     *) usage ;;
   esac
@@ -58,6 +62,7 @@ get_conf() {
 [ -n "$server" ] && set_conf SIGNAGE_SERVER "$server"
 [ -n "$audio" ] && set_conf AUDIO "$audio"
 [ -n "$schedule" ] && set_conf SCHEDULE "$schedule"
+[ -n "$cec" ] && set_conf CEC_WAKE "$cec"
 source=$(get_conf MEDIA_SOURCE)
 source=${source:-server}
 case $source in
@@ -78,7 +83,8 @@ if [ "$source" = server ]; then
   esac
 fi
 
-apt-get install -y mpv kms++-utils curl
+# v4l-utils: cec-ctl for CEC_WAKE.
+apt-get install -y mpv kms++-utils curl v4l-utils
 
 install -m 755 "$here"/bin/*.sh /usr/local/bin/
 for f in "$here"/systemd/*; do
@@ -124,13 +130,13 @@ else
   systemctl enable work-hours-on.timer work-hours-off.timer
 fi
 systemctl enable --now sync-media.timer
-systemctl enable video-looper.service scan-video-folder.timer screen-blank.service
+systemctl enable video-looper.service scan-video-folder.timer screen-blank.service cec-wake.service
 
 # Fetch the media now, and if the screen is on, restart the looper on it.
 systemctl start sync-media.service || echo "WARNING: first sync failed (source: $source)" >&2
 if systemctl is-active -q work-hours.target; then
-  systemctl --no-block restart video-looper.service
+  systemctl --no-block restart video-looper.service cec-wake.service
 fi
 
-echo "Installed: media from $source, sound $(get_conf AUDIO), schedule $schedule."
+echo "Installed: media from $source, sound $(get_conf AUDIO), schedule $schedule, CEC wake $(get_conf CEC_WAKE)."
 echo "The looper plays from $(get_conf MEDIA_DIR); reboot to start in the right mode."

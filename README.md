@@ -92,8 +92,8 @@ sudo ./install.sh --museum
 sudo reboot
 ```
 
-`--museum` is short for `--usb-direct --audio --always-on`; each can also be given on
-its own. They set three lines in `/etc/default/pi-video-looper`. Options not given
+`--museum` is short for `--usb-direct --audio --always-on --cec-wake`; each can also
+be given on its own. They set three lines in `/etc/default/pi-video-looper`. Options not given
 keep the value that is already there, and a config without the lines means the
 office behaviour (server, silent, work hours), so re-running `install.sh` on the
 office Pis changes nothing.
@@ -103,6 +103,7 @@ office Pis changes nothing.
 | `MEDIA_SOURCE` | `server`: mirror the upload page | `usb-direct`: play straight from a USB stick |
 | `AUDIO` | `no` | `yes`, on `AUDIO_DEVICE` (default `auto`) |
 | `SCHEDULE` | `work-hours`: Mon-Fri 06:30-17:30 | `always`: plays whenever the Pi is on |
+| `CEC_WAKE` | `no` | `yes`: keeps the screen on over HDMI-CEC |
 
 **Changing the videos:** put the files on a USB stick (top level, no folders;
 the same formats and natural filename order as above) and plug it in.
@@ -134,6 +135,16 @@ sound, list the devices with `mpv --audio-device=help` and set e.g.
 `AUDIO_DEVICE=alsa/hdmi:CARD=vc4hdmi0,DEV=0` (the HDMI port next to the USB-C
 power socket on a Pi 5) in `/etc/default/pi-video-looper`, then
 `sudo systemctl restart video-looper`.
+
+**CEC wake:** screens with their own auto-standby (the museum's Metz TV) go
+dark while the Pi keeps playing. With `CEC_WAKE=yes`, `cec-wake.service` sends
+the screen "Image View On" and announces the Pi as "Active Source" every
+`CEC_WAKE_INTERVAL` seconds (60) on each HDMI port that has a screen; that kept
+the Metz on, and it also switches the screen to the Pi at boot. It runs only in
+work hours, so it never fights the night blanking. CEC has to be enabled in the
+screen's menu (HDMI-CEC, Anynet+, SimpLink, Bravia Sync, EasyLink, ...); check
+with `sudo cec-ctl -d /dev/cec0 -S` that the screen answers. Many screens ignore
+"Standby" from a player, so the Pi cannot switch them off this way.
 
 **Always on** disables `work-hours-on/-off.timer`, and `select-hours-target`
 starts `work-hours.target` at every boot. Switching the TV off and on is all
