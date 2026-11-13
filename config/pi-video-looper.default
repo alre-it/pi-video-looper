@@ -3,7 +3,9 @@
 # comments: anything after the value becomes part of it. Comments go on their
 # own line.
 
-# Where the media comes from: server (the upload page) or usb (a USB stick).
+# Where the media comes from: server (the upload page), usb (copied from a
+# USB stick) or usb-direct (played straight from the stick, mounted read-only
+# at MEDIA_DIR=/media/pi-video-looper-usb; install.sh sets MEDIA_DIR).
 MEDIA_SOURCE=server
 # Upload server the media is mirrored from (sync-media.sh); set by install.sh.
 SIGNAGE_SERVER=http://<server-host>:8300

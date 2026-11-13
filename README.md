@@ -92,7 +92,7 @@ sudo ./install.sh --museum
 sudo reboot
 ```
 
-`--museum` is short for `--usb --audio --always-on`; each can also be given on
+`--museum` is short for `--usb-direct --audio --always-on`; each can also be given on
 its own. They set three lines in `/etc/default/pi-video-looper`. Options not given
 keep the value that is already there, and a config without the lines means the
 office behaviour (server, silent, work hours), so re-running `install.sh` on the
@@ -100,22 +100,34 @@ office Pis changes nothing.
 
 | Setting | Office (default) | Museum |
 |---|---|---|
-| `MEDIA_SOURCE` | `server`: mirror the upload page | `usb`: mirror a USB stick |
+| `MEDIA_SOURCE` | `server`: mirror the upload page | `usb-direct`: play straight from a USB stick |
 | `AUDIO` | `no` | `yes`, on `AUDIO_DEVICE` (default `auto`) |
 | `SCHEDULE` | `work-hours`: Mon-Fri 06:30-17:30 | `always`: plays whenever the Pi is on |
 
 **Changing the videos:** put the files on a USB stick (top level, no folders;
-the same formats and natural filename order as above) and plug it in. Every 2
-minutes `sync-usb.sh` mounts the stick read-only, copies new and changed files
-into `/var/lib/pi-video-looper/media`, deletes files that are no longer on the
-stick, and unmounts it again; the scan timer then restarts the looper. New videos
-are on screen within about 4 minutes, plus the copy time. The stick can stay in
-or be pulled at any time: the Pi always plays its local copy. A stick without
-any media files (the wrong stick, an empty one) changes nothing.
+the same formats and natural filename order as above) and plug it in.
+`mount-usb.sh` mounts it read-only at `/media/pi-video-looper-usb` and restarts
+the looper, which plays straight from the stick. A udev rule
+(`90-pi-video-looper.rules`) runs it as soon as a USB disk is plugged in or
+pulled, and `sync-media.timer` every 2 minutes as a fallback, so a new stick is
+on screen within seconds. The stick has to stay in: pulled, it is unmounted and
+the screen stays black until a stick is back. Disks that have something mounted
+are never taken for the stick, so a Pi that boots from USB is fine.
 
-Mounting needs root, so in USB mode `install.sh` adds
+`--usb` instead copies the stick to `/var/lib/pi-video-looper/media` every 2
+minutes (`sync-usb.sh`) and plays the copy, so the stick can be pulled; a stick
+without media files changes nothing. That needs a writable Pi.
+
+Mounting needs root, so in both USB modes `install.sh` adds
 `/etc/systemd/system/sync-media.service.d/usb.conf` with `User=root`; the server
 sync stays unprivileged.
+
+**Read-only Pi:** with `--usb-direct` nothing is written to the Pi, so it can run
+with Raspberry Pi OS's overlay file system (`sudo raspi-config nonint
+enable_overlayfs`, reboot): every boot starts from the same state and pulling the
+plug cannot damage anything. Logs are lost at reboot. To change the Pi (updates,
+re-running `install.sh`), `sudo raspi-config nonint disable_overlayfs`, reboot,
+change, enable again, reboot.
 
 **Sound** goes out over HDMI to the TV; set the volume on the TV. If there is no
 sound, list the devices with `mpv --audio-device=help` and set e.g.

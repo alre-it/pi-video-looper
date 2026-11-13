@@ -24,7 +24,9 @@ TTYVHangup=yes
 TTYVTDisallocate=yes
 
 ExecStartPre=+/usr/bin/chvt 1
-ExecStartPre=+/usr/local/bin/build-playlist.sh /var/lib/pi-video-looper/media /run/playlist.m3u
+# MEDIA_DIR from /etc/default/pi-video-looper (the USB mount with usb-direct);
+# build-playlist.sh falls back to /var/lib/pi-video-looper/media when it is empty.
+ExecStartPre=+/usr/local/bin/build-playlist.sh "${MEDIA_DIR}" /run/playlist.m3u
 ExecStart=/usr/local/bin/play-loop.sh /run/playlist.m3u
 
 Restart=always
