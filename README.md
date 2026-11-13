@@ -12,6 +12,10 @@ drops off the screens when its window ends.
 Runs on `bermon01`, `bermon02` and `bermon03` (Raspberry Pi 5, Raspberry Pi OS Lite, bookworm);
 the upload server runs on espocrm2, port 8300.
 
+**Museum mode** (`install.sh --museum`) is the same player for a screen with no
+server and no schedule: it plays the videos from a USB stick, with sound, whenever
+the Pi is on. See [Museum mode](#museum-mode).
+
 ## How it works
 
 | Piece | What it does |
@@ -21,7 +25,7 @@ the upload server runs on espocrm2, port 8300.
 | `work-hours-on.timer` | Mon-Fri 06:30 → `work-hours.target`. |
 | `work-hours-off.timer` | Mon-Fri 17:30 → `night-hours.target`. |
 | `select-hours-target.service` | At boot, picks the mode for the current time (window in `/etc/default/pi-video-looper`). |
-| `video-looper.service` | Builds `/run/playlist.m3u` from the media directory and plays it with `mpv` in an endless loop. Part of work hours. |
+| `video-looper.service` | Builds `/run/playlist.m3u` from the media directory and plays it with `mpv` (`play-loop.sh`) in an endless loop. Part of work hours. |
 | `scan-video-folder.timer` | Every 2 min: if the media directory changed, restarts the looper so the playlist is rebuilt. |
 | `screen-blank.service` | Keeps `kmsblank` running all night, so the TV gets no signal and drops into standby. |
 
@@ -80,13 +84,79 @@ still has the old SMB mount disables and removes it.
 If the work window changes, edit both the `OnCalendar=` lines in
 `systemd/work-hours-*.timer` and `/etc/default/pi-video-looper`.
 
+## Museum mode
+
+```sh
+git clone <this repo> && cd pi-video-looper
+sudo ./install.sh --museum
+sudo reboot
+```
+
+`--museum` is short for `--usb-direct --audio --always-on --cec-wake`; each can also
+be given on its own. They set three lines in `/etc/default/pi-video-looper`. Options not given
+keep the value that is already there, and a config without the lines means the
+office behaviour (server, silent, work hours), so re-running `install.sh` on the
+office Pis changes nothing.
+
+| Setting | Office (default) | Museum |
+|---|---|---|
+| `MEDIA_SOURCE` | `server`: mirror the upload page | `usb-direct`: play straight from a USB stick |
+| `AUDIO` | `no` | `yes`, on `AUDIO_DEVICE` (default `auto`) |
+| `SCHEDULE` | `work-hours`: Mon-Fri 06:30-17:30 | `always`: plays whenever the Pi is on |
+| `CEC_WAKE` | `no` | `yes`: keeps the screen on over HDMI-CEC |
+
+**Changing the videos:** put the files on a USB stick (top level, no folders;
+the same formats and natural filename order as above) and plug it in.
+`mount-usb.sh` mounts it read-only at `/media/pi-video-looper-usb` and restarts
+the looper, which plays straight from the stick. A udev rule
+(`90-pi-video-looper.rules`) runs it as soon as a USB disk is plugged in or
+pulled, and `sync-media.timer` every 2 minutes as a fallback, so a new stick is
+on screen within seconds. The stick has to stay in: pulled, it is unmounted and
+the screen stays black until a stick is back. Disks that have something mounted
+are never taken for the stick, so a Pi that boots from USB is fine.
+
+`--usb` instead copies the stick to `/var/lib/pi-video-looper/media` every 2
+minutes (`sync-usb.sh`) and plays the copy, so the stick can be pulled; a stick
+without media files changes nothing. That needs a writable Pi.
+
+Mounting needs root, so in both USB modes `install.sh` adds
+`/etc/systemd/system/sync-media.service.d/usb.conf` with `User=root`; the server
+sync stays unprivileged.
+
+**Read-only Pi:** with `--usb-direct` nothing is written to the Pi, so it can run
+with Raspberry Pi OS's overlay file system (`sudo raspi-config nonint
+enable_overlayfs`, reboot): every boot starts from the same state and pulling the
+plug cannot damage anything. Logs are lost at reboot. To change the Pi (updates,
+re-running `install.sh`), `sudo raspi-config nonint disable_overlayfs`, reboot,
+change, enable again, reboot.
+
+**Sound** goes out over HDMI to the TV; set the volume on the TV. If there is no
+sound, list the devices with `mpv --audio-device=help` and set e.g.
+`AUDIO_DEVICE=alsa/hdmi:CARD=vc4hdmi0,DEV=0` (the HDMI port next to the USB-C
+power socket on a Pi 5) in `/etc/default/pi-video-looper`, then
+`sudo systemctl restart video-looper`.
+
+**CEC wake:** screens with their own auto-standby (the museum's Metz TV) go
+dark while the Pi keeps playing. With `CEC_WAKE=yes`, `cec-wake.service` sends
+the screen "Image View On" and announces the Pi as "Active Source" every
+`CEC_WAKE_INTERVAL` seconds (60) on each HDMI port that has a screen; that kept
+the Metz on, and it also switches the screen to the Pi at boot. It runs only in
+work hours, so it never fights the night blanking. CEC has to be enabled in the
+screen's menu (HDMI-CEC, Anynet+, SimpLink, Bravia Sync, EasyLink, ...); check
+with `sudo cec-ctl -d /dev/cec0 -S` that the screen answers. Many screens ignore
+"Standby" from a player, so the Pi cannot switch them off this way.
+
+**Always on** disables `work-hours-on/-off.timer`, and `select-hours-target`
+starts `work-hours.target` at every boot. Switching the TV off and on is all
+that is needed; the Pi keeps playing in between.
+
 ## Operating it
 
 ```sh
 systemctl is-active work-hours.target night-hours.target video-looper.service
 systemctl list-timers 'work-hours-*'
 journalctl -b -u video-looper -u select-hours-target -u scan-video-folder -u sync-media
-sudo systemctl start sync-media.service    # fetch now instead of waiting 2 min
+sudo systemctl start sync-media.service    # fetch (or copy from the stick) now instead of waiting 2 min
 ls -la /var/lib/pi-video-looper/media      # what this screen currently has
 sudo systemctl start night-hours.target   # screen off now
 sudo systemctl start work-hours.target    # screen on now

@@ -1,7 +1,12 @@
 #!/bin/sh
 # Start work-hours.target inside the work window, night-hours.target outside.
+# SCHEDULE=always: the looper runs whenever the Pi is on.
 # --no-block: this runs while multi-user.target is starting, and the looper is
 # ordered after multi-user.target, so waiting for the job would deadlock.
+if [ "${SCHEDULE:-work-hours}" = always ]; then
+  exec systemctl --no-block start work-hours.target
+fi
+
 WORK_DAYS_MAX=${WORK_DAYS_MAX:-5}
 WORK_START=${WORK_START:-0630}
 WORK_END=${WORK_END:-1730}

@@ -1,0 +1,4 @@
+# MEDIA_SOURCE=usb / usb-direct: look at the USB stick as soon as a USB disk is
+# plugged in or pulled, instead of waiting for the next sync-media.timer run.
+# Installed to /etc/udev/rules.d by install.sh in the USB modes only.
+ACTION=="add|remove", SUBSYSTEM=="block", ENV{ID_BUS}=="usb", RUN+="/usr/bin/systemctl --no-block start sync-media.service"
