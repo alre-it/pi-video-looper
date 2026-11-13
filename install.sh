@@ -93,6 +93,17 @@ done
 install -d -o "$user" -g "$user" -m 755 "$media"
 # mpv plays the sound through ALSA.
 usermod -aG audio "$user"
+# The looper's login session (PAMName=login) would start PipeWire and
+# WirePlumber for the user; WirePlumber then restores its own saved mixer
+# level right after play-loop.sh has set .volume, and mpv does not need
+# them. Masked for this user only.
+units="$(getent passwd "$user" | cut -d: -f6)/.config/systemd/user"
+install -d -o "$user" -g "$user" "$units"
+for u in pipewire.service pipewire.socket pipewire-pulse.service pipewire-pulse.socket \
+         wireplumber.service filter-chain.service; do
+  ln -sfn /dev/null "$units/$u"
+done
+chown -h "$user:$user" "$units"/*
 
 # USB modes: mounting the stick needs root (the server sync stays
 # unprivileged), and udev looks at the stick as soon as one is plugged in.

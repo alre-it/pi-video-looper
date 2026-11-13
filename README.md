@@ -152,7 +152,9 @@ the read-only Pi and travel with the stick. `.playorder` holds `random-start`
 (begin at a random video, then in order) or `shuffle` (a random order); without
 it the videos play in name order. `.volume` holds the level of the sound card's
 `PCM` control in dB, e.g. `-4` (0 is the full signal; the Pi's headphone jack goes
-up to +4). The stick is mounted read-only, so write them with
+up to +4). `install.sh` masks PipeWire and WirePlumber for the looper's user:
+WirePlumber would otherwise restore its own saved level at every boot, just after
+the looper has set this one. The stick is mounted read-only, so write them with
 `sudo mount -o remount,rw /media/pi-video-looper-usb`, then `sync` and remount `ro`.
 
 **Skipping:** mpv listens on `/run/pi-video-looper/mpv.sock`;
