@@ -19,7 +19,10 @@ restart_looper() {
 
 if mountpoint -q "$MNT"; then
   src=$(findmnt -no SOURCE "$MNT")
-  if [ -b "$src" ]; then
+  # A pulled stick loses its device node; a card reader with the card pulled
+  # keeps the node but its size drops to 0.
+  size=$(blockdev --getsize64 "$src" 2>/dev/null || echo 0)
+  if [ -b "$src" ] && [ "$size" -gt 0 ]; then
     echo "stick $src is mounted"
     exit 0
   fi
