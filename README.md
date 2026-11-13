@@ -146,6 +146,19 @@ screen's menu (HDMI-CEC, Anynet+, SimpLink, Bravia Sync, EasyLink, ...); check
 with `sudo cec-ctl -d /dev/cec0 -S` that the screen answers. Many screens ignore
 "Standby" from a player, so the Pi cannot switch them off this way.
 
+**Order and volume on the stick:** two files next to the videos, read each
+time the looper starts (`sudo systemctl restart video-looper`), so they survive
+the read-only Pi and travel with the stick. `.playorder` holds `random-start`
+(begin at a random video, then in order) or `shuffle` (a random order); without
+it the videos play in name order. `.volume` holds the level of the sound card's
+`PCM` control in dB, e.g. `-4` (0 is the full signal; the Pi's headphone jack goes
+up to +4). The stick is mounted read-only, so write them with
+`sudo mount -o remount,rw /media/pi-video-looper-usb`, then `sync` and remount `ro`.
+
+**Skipping:** mpv listens on `/run/pi-video-looper/mpv.sock`;
+`sudo looper-next.sh` plays the next video (`sudo looper-next.sh prev` the previous
+one).
+
 **Always on** disables `work-hours-on/-off.timer`, and `select-hours-target`
 starts `work-hours.target` at every boot. Switching the TV off and on is all
 that is needed; the Pi keeps playing in between.
