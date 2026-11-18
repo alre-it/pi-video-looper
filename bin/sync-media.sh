@@ -10,6 +10,12 @@
 # keeps playing.
 set -eu
 
+# The media can come from a USB stick instead: copied (usb) or played in place (usb-direct).
+case ${MEDIA_SOURCE:-server} in
+  usb) exec /usr/local/bin/sync-usb.sh ;;
+  usb-direct) exec /usr/local/bin/mount-usb.sh ;;
+esac
+
 : "${SIGNAGE_SERVER:?SIGNAGE_SERVER is not set (see /etc/default/pi-video-looper)}"
 MEDIA_DIR=${MEDIA_DIR:-/var/lib/pi-video-looper/media}
 SCREEN=${SCREEN:-$(hostname -s)}

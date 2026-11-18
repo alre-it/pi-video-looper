@@ -1,14 +1,32 @@
 # /etc/default/pi-video-looper
+# systemd reads this file as an EnvironmentFile=, which does NOT strip trailing
+# comments: anything after the value becomes part of it. Comments go on their
+# own line.
+
+# Where the media comes from: server (the upload page), usb (copied from a
+# USB stick) or usb-direct (played straight from the stick, mounted read-only
+# at MEDIA_DIR=/media/pi-video-looper-usb; install.sh sets MEDIA_DIR).
+MEDIA_SOURCE=server
 # Upload server the media is mirrored from (sync-media.sh); set by install.sh.
 SIGNAGE_SERVER=http://<server-host>:8300
 # Local mirror the looper plays from.
 MEDIA_DIR=/var/lib/pi-video-looper/media
 
+# Sound: no (silent) or yes. AUDIO_DEVICE is an mpv device name,
+# list them with: mpv --audio-device=help
+AUDIO=no
+AUDIO_DEVICE=auto
+
+# Keep the screen on over HDMI-CEC while the looper runs: no or yes.
+# Sends "Image View On" every CEC_WAKE_INTERVAL seconds; the screen needs
+# CEC enabled in its menu.
+CEC_WAKE=no
+CEC_WAKE_INTERVAL=60
+
+# When the looper runs: work-hours (the window below) or always.
+SCHEDULE=work-hours
 # The work-hours window used at boot.
 # Keep it in step with the OnCalendar= times in work-hours-on/-off.timer.
-# systemd reads this file as an EnvironmentFile=, which does NOT strip trailing
-# comments: anything after the value becomes part of it. Comments go on their
-# own line.
 # WORK_DAYS_MAX: 1=Mon .. 7=Sun; 5 means Mon-Fri.
 WORK_DAYS_MAX=5
 WORK_START=0630

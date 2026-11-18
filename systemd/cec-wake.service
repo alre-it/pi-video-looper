@@ -1,0 +1,15 @@
+[Unit]
+Description=Keep the screen on over HDMI-CEC while the looper runs
+# Only in work hours: at night screen-blank.service lets the screen sleep.
+PartOf=work-hours.target
+After=video-looper.service
+
+[Service]
+EnvironmentFile=-/etc/default/pi-video-looper
+ExecCondition=/bin/sh -c '[ "$CEC_WAKE" = yes ]'
+ExecStart=/usr/local/bin/cec-wake.sh
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=work-hours.target
